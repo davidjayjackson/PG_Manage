@@ -1,13 +1,12 @@
-# library(tidyverse)
+library(tidyverse)
 library(janitor)
 library(RPostgres)
 library(DBI)
-library(readxl)
 rm(list=ls())
 # Establish connection to PostgreSQL database
 con <- dbConnect(
   RPostgres::Postgres(),
-  dbname = "tidytuesday",
+  dbname = "our_world",
   host = "localhost",     # e.g., "localhost" or "your-server.com"
   port = 5432,           # Default PostgreSQL port
   user = "postgres",
@@ -37,4 +36,19 @@ tuesdata <- tidytuesdayR::tt_load('2025-02-18')
 FBI <- tuesdata$agencies
 dbWriteTable(con, "FBI",FBI, overwrite=TRUE,append=FALSE)
 
+dbListTables(con)
+
+## Our World In Data
+## Energy Data
+energy_data <- readxl::read_xlsx('energy-data.xlsx')
+
+dbWriteTable(con, "energy_data",energy_data, overwrite=TRUE,append=FALSE)
+
+# Pull Columns that contain "Biofuel"
+
+biofuel <- energy_data|> select(country,year,gdp,matches("biofuel"))
+coal <- energy_data|> select(country,year,gdp,matches("coal"))
+
+dbWriteTable(con, "biofuel",biofuel, overwrite=TRUE,append=FALSE)
+dbWriteTable(con, "coalfuel",coal, overwrite=TRUE,append=FALSE)
 dbListTables(con)
